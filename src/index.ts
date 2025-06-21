@@ -21,6 +21,7 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
 
         if (arg === '--') {
             passthrough = args.slice(i + 1);
+            break;
         }
 
         if (arg.startsWith('--')) {
@@ -107,9 +108,13 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
 function parseValue(input: string, typeName: ZodFirstPartyTypeKind) {
     switch (typeName) {
         case ZodFirstPartyTypeKind.ZodBoolean:
-            return input === 'true' || input === '1';
+            if (input === 'true' || input === '1') return true;
+            if (input === 'false' || input === '0') return false;
+            throw new Error(`Invalid boolean value: ${input}`);
         case ZodFirstPartyTypeKind.ZodNumber:
-            return Number(input);
+            const num = Number(input);
+            if (isNaN(num)) throw new Error(`Invalid number value: ${input}`);
+            return num;
         default:
             return input;
     }

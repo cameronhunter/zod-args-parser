@@ -178,6 +178,165 @@ describe('error cases', () => {
             `[ZodValidationError: Validation error: Array must contain at most 1 element(s) at "positionals"]`
         );
     });
+
+    describe('invalid parsing', () => {
+        test('invalid number value', () => {
+            expect(() => parse({ options: z.object({ count: z.number() }) }, ['--count', 'abc'])).toThrow();
+        });
+
+        test('invalid boolean value', () => {
+            expect(() => parse({ options: z.object({ flag: z.boolean() }) }, ['--flag=maybe'])).toThrow();
+        });
+
+        test('missing value for string option', () => {
+            expect(() => parse({ options: z.object({ name: z.string() }) }, ['--name'])).toThrow();
+        });
+
+        test('missing value for number option', () => {
+            expect(() => parse({ options: z.object({ count: z.number() }) }, ['--count'])).toThrow();
+        });
+    });
+
+    describe('malformed syntax', () => {
+        test('triple dash', () => {
+            expect(() => parse({ options: z.object({}).strict() }, ['---flag'])).toThrow();
+        });
+
+        test('equals with no value', () => {
+            const result = parse({ options: z.object({ name: z.string() }) }, ['--name=']);
+            expect(result.options.name).toBe('');
+        });
+    });
+});
+
+describe('edge cases', () => {
+    test('empty string values', () => {
+        const result = parse({ options: z.object({ value: z.string() }) }, ['--value', '']);
+        expect(result.options.value).toBe('');
+    });
+
+    test('special characters in values', () => {
+        const result = parse({ options: z.object({ path: z.string() }) }, ['--path', '/path/with spaces & symbols!']);
+        expect(result.options.path).toBe('/path/with spaces & symbols!');
+    });
+
+    test('options after positionals', () => {
+        const result = parse(
+            { options: z.object({ flag: z.boolean() }), positionals: z.array(z.string()) },
+            ['pos1', '--flag', 'pos2']
+        );
+        expect(result.options.flag).toBe(true);
+        expect(result.positionals).toEqual(['pos1', 'pos2']);
+    });
+
+    test('mixed options before --', () => {
+        const result = parse(
+            { options: z.object({ flag: z.boolean(), name: z.string() }) },
+            ['--flag', '--name', 'test', '--', '--other']
+        );
+        expect(result.options).toEqual({ flag: true, name: 'test' });
+        expect(result['--']).toEqual(['--other']);
+    });
+
+    test('empty array initialization', () => {
+        const result = parse({ options: z.object({ items: z.array(z.string()).default([]) }) }, []);
+        expect(result.options.items).toEqual([]);
+    });
+});
+
+describe('zod schema features', () => {
+    describe('optional fields', () => {
+        test('optional field not provided', () => {
+            const result = parse({ options: z.object({ name: z.string().optional() }) }, []);
+            expect(result.options.name).toBeUndefined();
+        });
+
+        test('optional field provided', () => {
+            const result = parse({ options: z.object({ name: z.string().optional() }) }, ['--name', 'test']);
+            expect(result.options.name).toBe('test');
+        });
+    });
+
+    describe('default values', () => {
+        test('default used when not provided', () => {
+            const result = parse({ options: z.object({ count: z.number().default(5) }) }, []);
+            expect(result.options.count).toBe(5);
+        });
+
+        test('default overridden when provided', () => {
+            const result = parse({ options: z.object({ count: z.number().default(5) }) }, ['--count', '10']);
+            expect(result.options.count).toBe(10);
+        });
+    });
+
+    describe('coercion', () => {
+        test('coerce string to number', () => {
+            const result = parse({ positionals: z.tuple([z.coerce.number()]) }, ['42']);
+            expect(result.positionals[0]).toBe(42);
+        });
+
+        test('coerce string to boolean in positionals', () => {
+            const result = parse({ positionals: z.tuple([z.coerce.boolean()]) }, ['true']);
+            expect(result.positionals[0]).toBe(true);
+        });
+    });
+
+    describe('refinements', () => {
+        test('positive number refinement passes', () => {
+            const result = parse({ options: z.object({ count: z.number().positive() }) }, ['--count', '5']);
+            expect(result.options.count).toBe(5);
+        });
+
+        test('positive number refinement fails', () => {
+            expect(() => parse({ options: z.object({ count: z.number().positive() }) }, ['--count', '-5'])).toThrow();
+        });
+    });
+});
+
+describe('advanced parsing scenarios', () => {
+    test('multiple -- separators (only first one counts)', () => {
+        const result = parse({}, ['--flag', '--', 'arg1', '--', 'arg2']);
+        expect(result['--']).toEqual(['arg1', '--', 'arg2']);
+    });
+
+    test('options and positionals mixed before --', () => {
+        const result = parse(
+            { 
+                options: z.object({ verbose: z.boolean(), name: z.string() }),
+                positionals: z.array(z.string())
+            },
+            ['file1', '--verbose', 'file2', '--name', 'test', 'file3', '--', '--extra']
+        );
+        expect(result.options).toEqual({ verbose: true, name: 'test' });
+        expect(result.positionals).toEqual(['file1', 'file2', 'file3']);
+        expect(result['--']).toEqual(['--extra']);
+    });
+
+    test('array with no values provided', () => {
+        const result = parse({ options: z.object({ files: z.array(z.string()).default([]) }) }, []);
+        expect(result.options.files).toEqual([]);
+    });
+
+    test('variadic tuple with rest elements', () => {
+        const result = parse(
+            { options: z.object({ coords: z.tuple([z.number(), z.number()]).rest(z.string()) }) },
+            ['--coords', '1', '2', 'extra1', 'extra2']
+        );
+        expect(result.options.coords).toEqual([1, 2, 'extra1', 'extra2']);
+    });
+
+    test('complex nested validation', () => {
+        const result = parse(
+            {
+                options: z.object({
+                    config: z.string().refine(s => s.endsWith('.json'), 'Must be a JSON file'),
+                    port: z.number().int().min(1000).max(65535)
+                })
+            },
+            ['--config', 'app.json', '--port', '3000']
+        );
+        expect(result.options).toEqual({ config: 'app.json', port: 3000 });
+    });
 });
 
 test('kitchen sink', () => {
