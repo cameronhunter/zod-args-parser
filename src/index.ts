@@ -1,8 +1,8 @@
 import z, { ZodFirstPartyTypeKind } from 'zod/v3';
 
 export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
-    args: string[] = process.argv.slice(2),
-    config: { options?: Options; positionals?: Positionals }
+    config: { options?: Options; positionals?: Positionals },
+    args: string[] = process.argv.slice(2)
 ): { options: z.objectOutputType<Options, z.ZodTypeAny>; positionals: z.output<Positionals> } {
     const options = {};
     const positionals = [];
