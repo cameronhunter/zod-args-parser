@@ -1,9 +1,11 @@
 import type * as z3 from 'zod/v3';
 import type * as z4 from 'zod/v4/core';
+import { parse as z4Parse } from 'zod/v4/core';
 
 export type ZodTypeAny = z3.ZodTypeAny | z4.$ZodType;
 export type ZodTuple = z3.ZodTuple | z4.$ZodTuple;
 export type ZodArrayAny = z3.ZodArray<z3.ZodTypeAny> | z4.$ZodArray<z4.$ZodType>;
+export type ZodObjectAny = z3.AnyZodObject | z4.$ZodObject;
 
 export type ZodObjectOutput<T extends { [name: string]: ZodTypeAny }> = {
     [name in keyof T]: ZodOutput<T[name]>;
@@ -16,6 +18,23 @@ export type ZodOutput<T extends ZodTypeAny> = T extends z4.$ZodType
     : never;
 
 export type ZodTypeDefType = z4.$ZodTypeDef['type'];
+
+export function zodParse(input: ZodTypeAny, values: unknown) {
+    if (isZod4(input)) {
+        return z4Parse(input, values);
+    }
+
+    return input.parse(values);
+}
+
+// TODO: Make this type safe with generics
+export function getZodObjectShape(object: ZodObjectAny | undefined) {
+    if (!object) {
+        return undefined;
+    }
+
+    return isZod4(object) ? object._zod.def.shape : object._def.shape();
+}
 
 export function getZodType(validator: ZodTypeAny): z4.$ZodTypeDef['type'] {
     if (isZod4(validator)) {

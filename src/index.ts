@@ -1,17 +1,18 @@
 import {
     getZodType,
+    type ZodObjectAny,
+    zodParse,
     type ZodArrayAny,
-    type ZodObjectOutput,
     type ZodOutput,
     type ZodTuple,
-    type ZodTypeAny,
     type ZodTypeDefType,
+    getZodObjectShape,
 } from './zod-compatibility.js';
 
-export function parse<Options extends { [option: string]: ZodTypeAny }, Positionals extends ZodTuple | ZodArrayAny>(
+export function parse<Options extends ZodObjectAny, Positionals extends ZodTuple | ZodArrayAny>(
     config: { options?: Options; positionals?: Positionals },
     args: string[] = process.argv.slice(2)
-): { options: ZodObjectOutput<Options>; positionals: ZodOutput<Positionals> } {
+): { options: ZodOutput<Options>; positionals: ZodOutput<Positionals> } {
     const options = {};
     const positionals = [];
 
@@ -23,13 +24,13 @@ export function parse<Options extends { [option: string]: ZodTypeAny }, Position
         if (arg === '--') {
             passthrough = args.slice(i + 1);
         }
-
         if (arg.startsWith('--')) {
             const negated = arg.startsWith('--no-');
             const parts = arg.slice(2).split('=');
             const fullName = parts.at(0)!;
             const nonNegatedName = negated ? fullName.slice(3) : fullName;
-            const validator = config.options?.[fullName] || config.options?.[nonNegatedName];
+            const validators = getZodObjectShape(config.options);
+            const validator = validators?.[fullName] || validators?.[nonNegatedName];
 
             if (!validator) {
                 const consumeNextArg = args[i + 1] !== undefined && !args[i + 1]?.startsWith('--');
@@ -61,6 +62,7 @@ export function parse<Options extends { [option: string]: ZodTypeAny }, Position
                     break;
                 }
                 case 'tuple': {
+                    // TODO: Support zod 4 tuples
                     const tuple = validator._def.items;
                     const value = tuple.map((item: any, j: number) => parseValue(args[i + 1 + j]!, getZodType(item)));
 
@@ -92,8 +94,8 @@ export function parse<Options extends { [option: string]: ZodTypeAny }, Position
     }
 
     return {
-        options: config.options ? z3.object(config.options).strict().parse(options) : ({} as any),
-        positionals: config.positionals ? config.positionals.parse(positionals) : ([] as any),
+        options: config.options ? zodParse(config.options, options) : ({} as any),
+        positionals: config.positionals ? zodParse(config.positionals, positionals) : ([] as any),
         ...(passthrough ? { '--': passthrough } : undefined),
     };
 }
