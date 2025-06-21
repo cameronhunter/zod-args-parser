@@ -34,5 +34,8 @@
     "peerDependencies": {
         "zod": "^3.25.0"
     },
-    "website": "https://github.com/cameronhunter/zod-arg-parser"
+    "website": "https://github.com/cameronhunter/zod-arg-parser",
+    "dependencies": {
+        "zod-validation-error": "^3.5.2"
+    }
 }

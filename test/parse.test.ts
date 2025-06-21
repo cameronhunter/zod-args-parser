@@ -168,35 +168,12 @@ test('support for --', () => {
 
 describe('error cases', () => {
     test('undocumented option', () => {
-        expect(() => parse({ options: z.object({}).strict() }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(`
-          [ZodError: [
-            {
-              "code": "unrecognized_keys",
-              "keys": [
-                "unknown"
-              ],
-              "path": [],
-              "message": "Unrecognized key(s) in object: 'unknown'"
-            }
-          ]]
-        `);
+        expect(() => parse({ options: z.object({}).strict() }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(`[ZodValidationError: Validation error: Unrecognized key(s) in object: 'unknown' at "options"]`);
     });
 
     test('too many positionals', () => {
         expect(() => parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad']))
-            .toThrowErrorMatchingInlineSnapshot(`
-          [ZodError: [
-            {
-              "code": "too_big",
-              "maximum": 1,
-              "inclusive": true,
-              "exact": false,
-              "type": "array",
-              "path": [],
-              "message": "Array must contain at most 1 element(s)"
-            }
-          ]]
-        `);
+            .toThrowErrorMatchingInlineSnapshot(`[ZodValidationError: Validation error: Array must contain at most 1 element(s) at "positionals"]`);
     });
 });
 

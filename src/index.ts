@@ -1,7 +1,13 @@
 import z, { ZodFirstPartyTypeKind } from 'zod/v3';
+import { fromZodError } from 'zod-validation-error';
+
+type Configuration<Options extends z.AnyZodObject, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>> = {
+    options?: Options;
+    positionals?: Positionals;
+};
 
 export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
-    config: { options?: Options; positionals?: Positionals },
+    config: Configuration<Options, Positionals>,
     args: string[] = process.argv.slice(2)
 ): { options: z.output<Options>; positionals: z.output<Positionals> } {
     const options = {};
@@ -84,9 +90,14 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
         }
     }
 
+    const result = z.object(config).safeParse({ options, positionals });
+
+    if (!result.success) {
+        throw fromZodError(result.error);
+    }
+
     return {
-        options: config.options ? config.options.parse(options) : ({} as any),
-        positionals: config.positionals ? config.positionals.parse(positionals) : ([] as any),
+        ...(result.data as any),
         ...(passthrough ? { '--': passthrough } : undefined),
     };
 }
