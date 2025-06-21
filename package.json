@@ -1,0 +1,37 @@
+{
+    "name": "@cameronhunter/zod-arg-parser",
+    "description": "A CLI argument parser using `zod` for validation",
+    "version": "0.0.0",
+    "type": "module",
+    "main": "./lib/commonjs/index.js",
+    "types": "./lib/commonjs/index.d.ts",
+    "module": "./lib/module/index.js",
+    "exports": {
+        "types": "./lib/module/index.d.ts",
+        "import": "./lib/module/index.js",
+        "require": "./lib/commonjs/index.js"
+    },
+    "files": [
+        "lib/commonjs",
+        "lib/module"
+    ],
+    "scripts": {
+        "build:commonjs": "rm -rf lib/commonjs lib/*.commonjs.tsbuildinfo && tsc -p tsconfig.build.commonjs.json && echo '{ \"type\": \"commonjs\" }' > lib/commonjs/package.json",
+        "build:module": "rm -rf lib/module lib/*.module.tsbuildinfo && tsc -p tsconfig.build.module.json && echo '{ \"type\": \"module\" }' > lib/module/package.json",
+        "build": "npm run build:commonjs && npm run build:module",
+        "test": "vitest",
+        "prepublishOnly": "npm run build",
+        "release": "npm publish && git push --tags"
+    },
+    "devDependencies": {
+        "@tsconfig/node-lts": "^22.0.1",
+        "@tsconfig/strictest": "^2.0.5",
+        "@types/node": "^22.15.32",
+        "typescript": "^5.7.3",
+        "vitest": "^3.0.5"
+    },
+    "website": "https://github.com/cameronhunter/zod-arg-parser",
+    "dependencies": {
+        "zod": "^3.25.67"
+    }
+}
