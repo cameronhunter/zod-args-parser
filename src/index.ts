@@ -10,7 +10,7 @@ type Configuration<Options extends z.AnyZodObject, Positionals extends z.ZodTupl
 export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
     config: Configuration<Options, Positionals>,
     args: string[] = process.argv.slice(2)
-): { options: z.output<Options>; positionals: z.output<Positionals> } {
+): { options: z.output<Options>; positionals: z.output<Positionals>; '--'?: string[] } {
     const options = {};
     const positionals = [];
 
