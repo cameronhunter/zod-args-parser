@@ -24,10 +24,12 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
 
         if (arg.startsWith('--')) {
             const negated = arg.startsWith('--no-');
-            const [fullName, optionalValue] = arg.slice(2).split('=', 2);
-            const nonNegatedName = negated ? arg.slice('--no-'.length) : fullName!;
+            const firstEqualsIndex = arg.indexOf('=');
+            const fullName = arg.slice(2, firstEqualsIndex === -1 ? undefined : firstEqualsIndex);
+            const optionalValue = firstEqualsIndex === -1 ? undefined : arg.slice(firstEqualsIndex + 1);
+            const nonNegatedName = negated ? fullName.slice('no-'.length) : fullName;
             const validators = config.options?._def.shape();
-            const validator = validators?.[fullName!] || validators?.[nonNegatedName];
+            const validator = validators?.[fullName] || validators?.[nonNegatedName];
 
             if (!validator) {
                 const consumeNextArg = args[i + 1] !== undefined && !args[i + 1]?.startsWith('--');
