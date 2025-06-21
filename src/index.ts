@@ -1,9 +1,18 @@
-import z, { ZodFirstPartyTypeKind } from 'zod/v3';
+import * as z3 from 'zod/v3';
+import * as z4 from 'zod/v4/core';
+import {
+    type ZodArrayAny,
+    type ZodOutput,
+    type ZodTuple,
+    type ZodTypeAny,
+    type ZodObjectOutput,
+    getZodType,
+} from './zod-compatibility.js';
 
-export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
+export function parse<Options extends { [option: string]: ZodTypeAny }, Positionals extends ZodTuple | ZodArrayAny>(
     config: { options?: Options; positionals?: Positionals },
     args: string[] = process.argv.slice(2)
-): { options: z.objectOutputType<Options, z.ZodTypeAny>; positionals: z.output<Positionals> } {
+): { options: ZodObjectOutput<Options>; positionals: ZodOutput<Positionals> } {
     const options = {};
     const positionals = [];
 
@@ -33,34 +42,34 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
                 continue;
             }
 
-            const typeName = validator._def.typeName as ZodFirstPartyTypeKind;
+            const typeName = getZodType(validator);
 
             switch (typeName) {
-                case ZodFirstPartyTypeKind.ZodBoolean: {
+                case 'boolean': {
                     const value = parts.at(1) === undefined ? true : parseValue(parts.at(1)!, typeName);
                     // @ts-expect-error
                     options[nonNegatedName] = negated ? !value : value;
                     break;
                 }
-                case ZodFirstPartyTypeKind.ZodArray: {
+                case 'array': {
                     // @ts-expect-error
                     options[fullName] ||= [];
                     // @ts-expect-error
-                    options[fullName].push(parseValue(parts.at(1) ?? args[i + 1], validator._def.type._def.typeName));
+                    options[fullName].push(parseValue(parts.at(1) ?? args[i + 1], getZodType(validator._def.type)));
                     if (parts.at(1) === undefined) {
                         i++;
                     }
                     break;
                 }
-                case ZodFirstPartyTypeKind.ZodTuple: {
+                case 'tuple': {
                     const tuple = validator._def.items;
-                    const value = tuple.map((item: any, j: number) => parseValue(args[i + 1 + j]!, item._def.typeName));
+                    const value = tuple.map((item: any, j: number) => parseValue(args[i + 1 + j]!, getZodType(item)));
 
                     let advance = tuple.length;
 
                     if (validator._def.rest) {
                         const rest = args.slice(i + 1 + advance, args.length);
-                        value.push(...rest.map((value) => parseValue(value, validator._def.rest._def.typeName)));
+                        value.push(...rest.map((value) => parseValue(value, getZodType(validator._def.rest))));
                         advance += rest.length;
                     }
 
@@ -84,17 +93,17 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
     }
 
     return {
-        options: config.options ? z.object(config.options).strict().parse(options) : ({} as any),
+        options: config.options ? z3.object(config.options).strict().parse(options) : ({} as any),
         positionals: config.positionals ? config.positionals.parse(positionals) : ([] as any),
         ...(passthrough ? { '--': passthrough } : undefined),
     };
 }
 
-function parseValue(input: string, typeName: ZodFirstPartyTypeKind) {
+function parseValue(input: string, typeName: z4.$ZodTypeDef['type']) {
     switch (typeName) {
-        case ZodFirstPartyTypeKind.ZodBoolean:
+        case 'boolean':
             return input === 'true' || input === '1';
-        case ZodFirstPartyTypeKind.ZodNumber:
+        case 'number':
             return Number(input);
         default:
             return input;

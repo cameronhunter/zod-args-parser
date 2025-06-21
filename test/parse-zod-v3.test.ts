@@ -170,9 +170,8 @@ describe('error cases', () => {
     });
 
     test('too many positionals', () => {
-        expect(() =>
-            parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad'])
-        ).toThrowErrorMatchingInlineSnapshot(`
+        expect(() => parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad']))
+            .toThrowErrorMatchingInlineSnapshot(`
           [ZodError: [
             {
               "code": "too_big",
