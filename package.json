@@ -1,5 +1,5 @@
 {
-    "name": "@cameronhunter/zod-arg-parser",
+    "name": "@cameronhunter/zod-args-parser",
     "description": "A CLI argument parser using `zod` for validation",
     "version": "0.0.0",
     "type": "module",

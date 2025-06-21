@@ -124,6 +124,18 @@ describe('literal', () => {
     });
 });
 
+describe('tuples', () => {
+    test('simple tuple', () => {
+        const result = parse(['--tuple', '1', '2'], { options: { tuple: z.tuple([z.number(), z.number()]) } });
+        expect(result).toHaveProperty('options', { tuple: [1, 2] });
+    });
+
+    test('variadic tuple', () => {
+        const result = parse(['--tuple', '1', 'value'], { options: { tuple: z.tuple([z.number()]).rest(z.string()) } });
+        expect(result).toHaveProperty('options', { tuple: [1, 'value'] });
+    });
+});
+
 describe('positionals', () => {
     test('simple array', () => {
         const result = parse(['foo', 'bar', 'baz'], { positionals: z.array(z.string()) });

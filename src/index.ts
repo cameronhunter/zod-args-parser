@@ -44,17 +44,34 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
                 }
                 case ZodFirstPartyTypeKind.ZodArray: {
                     // @ts-expect-error
-                    options[name] ||= [];
+                    options[fullName] ||= [];
                     // @ts-expect-error
-                    options[name].push(parseValue(parts.at(1) ?? args[i + 1], validator._def.type._def.typeName));
+                    options[fullName].push(parseValue(parts.at(1) ?? args[i + 1], validator._def.type._def.typeName));
                     if (parts.at(1) === undefined) {
                         i++;
                     }
                     break;
                 }
+                case ZodFirstPartyTypeKind.ZodTuple: {
+                    const tuple = validator._def.items;
+                    const value = tuple.map((item: any, j: number) => parseValue(args[i + 1 + j]!, item._def.typeName));
+
+                    let advance = tuple.length;
+
+                    if (validator._def.rest) {
+                        const rest = args.slice(i + 1 + advance, args.length);
+                        value.push(...rest.map((value) => parseValue(value, validator._def.rest._def.typeName)));
+                        advance += rest.length;
+                    }
+
+                    // @ts-expect-error
+                    options[fullName] = value;
+                    i += advance;
+                    break;
+                }
                 default: {
                     // @ts-expect-error
-                    options[name] = parseValue(parts.at(1) ?? args[i + 1], typeName);
+                    options[fullName] = parseValue(parts.at(1) ?? args[i + 1], typeName);
                     if (parts.at(1) === undefined) {
                         i++;
                     }
