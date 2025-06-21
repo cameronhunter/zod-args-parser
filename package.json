@@ -28,10 +28,11 @@
         "@tsconfig/strictest": "^2.0.5",
         "@types/node": "^22.15.32",
         "typescript": "^5.7.3",
-        "vitest": "^3.0.5"
+        "vitest": "^3.0.5",
+        "zod": "^3.25.0"
     },
-    "website": "https://github.com/cameronhunter/zod-arg-parser",
-    "dependencies": {
-        "zod": "^3.25.67"
-    }
+    "peerDependencies": {
+        "zod": "^3.25.0"
+    },
+    "website": "https://github.com/cameronhunter/zod-args-parser"
 }
