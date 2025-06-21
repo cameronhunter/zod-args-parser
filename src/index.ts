@@ -24,11 +24,10 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
 
         if (arg.startsWith('--')) {
             const negated = arg.startsWith('--no-');
-            const parts = arg.slice(2).split('=');
-            const fullName = parts.at(0)!;
-            const nonNegatedName = negated ? fullName.slice(3) : fullName;
+            const [fullName, optionalValue] = arg.slice(2).split('=', 2);
+            const nonNegatedName = negated ? arg.slice('--no-'.length) : fullName!;
             const validators = config.options?._def.shape();
-            const validator = validators?.[fullName] || validators?.[nonNegatedName];
+            const validator = validators?.[fullName!] || validators?.[nonNegatedName];
 
             if (!validator) {
                 const consumeNextArg = args[i + 1] !== undefined && !args[i + 1]?.startsWith('--');
@@ -44,7 +43,7 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
 
             switch (typeName) {
                 case ZodFirstPartyTypeKind.ZodBoolean: {
-                    const value = parts.at(1) === undefined ? true : parseValue(parts.at(1)!, typeName);
+                    const value = optionalValue === undefined ? true : parseValue(optionalValue, typeName);
                     // @ts-expect-error
                     options[nonNegatedName] = negated ? !value : value;
                     break;
@@ -53,8 +52,8 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
                     // @ts-expect-error
                     options[fullName] ||= [];
                     // @ts-expect-error
-                    options[fullName].push(parseValue(parts.at(1) ?? args[i + 1], validator._def.type._def.typeName));
-                    if (parts.at(1) === undefined) {
+                    options[fullName].push(parseValue(optionalValue ?? args[i + 1], validator._def.type._def.typeName));
+                    if (optionalValue === undefined) {
                         i++;
                     }
                     break;
@@ -78,8 +77,8 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
                 }
                 default: {
                     // @ts-expect-error
-                    options[fullName] = parseValue(parts.at(1) ?? args[i + 1], typeName);
-                    if (parts.at(1) === undefined) {
+                    options[fullName] = parseValue(optionalValue ?? args[i + 1], typeName);
+                    if (optionalValue === undefined) {
                         i++;
                     }
                     break;
