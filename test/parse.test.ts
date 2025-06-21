@@ -168,6 +168,24 @@ describe('error cases', () => {
           ]]
         `);
     });
+
+    test('too many positionals', () => {
+        expect(() =>
+            parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad'])
+        ).toThrowErrorMatchingInlineSnapshot(`
+          [ZodError: [
+            {
+              "code": "too_big",
+              "maximum": 1,
+              "inclusive": true,
+              "exact": false,
+              "type": "array",
+              "path": [],
+              "message": "Array must contain at most 1 element(s)"
+            }
+          ]]
+        `);
+    });
 });
 
 test('kitchen sink', () => {
