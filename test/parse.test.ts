@@ -4,20 +4,20 @@ import { describe, expect, test } from 'vitest';
 
 describe('boolean', () => {
     test('flag', () => {
-        const result = parse({ options: { enable: z.boolean() } }, ['--enable']);
+        const result = parse({ options: z.object({ enable: z.boolean() }) }, ['--enable']);
 
         expect(result).toHaveProperty('options', { enable: true });
     });
 
     describe('value', () => {
         test('true', () => {
-            const result = parse({ options: { enable: z.boolean() } }, ['--enable=true']);
+            const result = parse({ options: z.object({ enable: z.boolean() }) }, ['--enable=true']);
 
             expect(result).toHaveProperty('options', { enable: true });
         });
 
         test('false', () => {
-            const result = parse({ options: { enable: z.boolean() } }, ['--enable=false']);
+            const result = parse({ options: z.object({ enable: z.boolean() }) }, ['--enable=false']);
 
             expect(result).toHaveProperty('options', { enable: false });
         });
@@ -26,13 +26,13 @@ describe('boolean', () => {
 
 describe('negation', () => {
     test('works for boolean flags', () => {
-        const result = parse({ options: { enable: z.boolean() } }, ['--no-enable']);
+        const result = parse({ options: z.object({ enable: z.boolean() }) }, ['--no-enable']);
 
         expect(result).toHaveProperty('options', { enable: false });
     });
 
     test('has no effect on other types', () => {
-        const result = parse({ options: { 'no-name': z.string() } }, ['--no-name', 'Cameron']);
+        const result = parse({ options: z.object({ 'no-name': z.string() }) }, ['--no-name', 'Cameron']);
 
         expect(result).toHaveProperty('options', { 'no-name': 'Cameron' });
     });
@@ -40,13 +40,13 @@ describe('negation', () => {
 
 describe('string', () => {
     test('arg value', () => {
-        const result = parse({ options: { name: z.string() } }, ['--name', 'Cameron']);
+        const result = parse({ options: z.object({ name: z.string() }) }, ['--name', 'Cameron']);
 
         expect(result).toHaveProperty('options', { name: 'Cameron' });
     });
 
     test('parameter value', () => {
-        const result = parse({ options: { name: z.string() } }, ['--name=Hunter']);
+        const result = parse({ options: z.object({ name: z.string() }) }, ['--name=Hunter']);
 
         expect(result).toHaveProperty('options', { name: 'Hunter' });
     });
@@ -54,13 +54,13 @@ describe('string', () => {
 
 describe('number', () => {
     test('arg value', () => {
-        const result = parse({ options: { times: z.number().int().positive() } }, ['--times', '1']);
+        const result = parse({ options: z.object({ times: z.number().int().positive() }) }, ['--times', '1']);
 
         expect(result).toHaveProperty('options', { times: 1 });
     });
 
     test('parameter value', () => {
-        const result = parse({ options: { times: z.number().int().positive() } }, ['--times=2']);
+        const result = parse({ options: z.object({ times: z.number().int().positive() }) }, ['--times=2']);
 
         expect(result).toHaveProperty('options', { times: 2 });
     });
@@ -69,13 +69,18 @@ describe('number', () => {
 describe('arrays', () => {
     describe('string', () => {
         test('repeated arg value', () => {
-            const result = parse({ options: { file: z.array(z.string()) } }, ['--file', 'foo', '--file', 'bar']);
+            const result = parse({ options: z.object({ file: z.array(z.string()) }) }, [
+                '--file',
+                'foo',
+                '--file',
+                'bar',
+            ]);
 
             expect(result).toHaveProperty('options', { file: ['foo', 'bar'] });
         });
 
         test('repeated parameter value', () => {
-            const result = parse({ options: { file: z.array(z.string()) } }, ['--file=foo', '--file=bar']);
+            const result = parse({ options: z.object({ file: z.array(z.string()) }) }, ['--file=foo', '--file=bar']);
 
             expect(result).toHaveProperty('options', { file: ['foo', 'bar'] });
         });
@@ -83,13 +88,13 @@ describe('arrays', () => {
 
     describe('number', () => {
         test('repeated arg value', () => {
-            const result = parse({ options: { file: z.array(z.number()) } }, ['--file', '1', '--file', '2']);
+            const result = parse({ options: z.object({ file: z.array(z.number()) }) }, ['--file', '1', '--file', '2']);
 
             expect(result).toHaveProperty('options', { file: [1, 2] });
         });
 
         test('repeated parameter value', () => {
-            const result = parse({ options: { file: z.array(z.number()) } }, ['--file=1', '--file=2']);
+            const result = parse({ options: z.object({ file: z.array(z.number()) }) }, ['--file=1', '--file=2']);
 
             expect(result).toHaveProperty('options', { file: [1, 2] });
         });
@@ -98,13 +103,13 @@ describe('arrays', () => {
 
 describe('enums', () => {
     test('arg value', () => {
-        const result = parse({ options: { color: z.enum(['red', 'blue']) } }, ['--color', 'red']);
+        const result = parse({ options: z.object({ color: z.enum(['red', 'blue']) }) }, ['--color', 'red']);
 
         expect(result).toHaveProperty('options', { color: 'red' });
     });
 
     test('parameter value', () => {
-        const result = parse({ options: { color: z.enum(['red', 'blue']) } }, ['--color=blue']);
+        const result = parse({ options: z.object({ color: z.enum(['red', 'blue']) }) }, ['--color=blue']);
 
         expect(result).toHaveProperty('options', { color: 'blue' });
     });
@@ -112,13 +117,13 @@ describe('enums', () => {
 
 describe('literal', () => {
     test('arg value', () => {
-        const result = parse({ options: { color: z.literal('red') } }, ['--color', 'red']);
+        const result = parse({ options: z.object({ color: z.literal('red') }) }, ['--color', 'red']);
 
         expect(result).toHaveProperty('options', { color: 'red' });
     });
 
     test('parameter value', () => {
-        const result = parse({ options: { color: z.literal('blue') } }, ['--color=blue']);
+        const result = parse({ options: z.object({ color: z.literal('blue') }) }, ['--color=blue']);
 
         expect(result).toHaveProperty('options', { color: 'blue' });
     });
@@ -126,12 +131,20 @@ describe('literal', () => {
 
 describe('tuples', () => {
     test('simple tuple', () => {
-        const result = parse({ options: { tuple: z.tuple([z.number(), z.number()]) } }, ['--tuple', '1', '2']);
+        const result = parse({ options: z.object({ tuple: z.tuple([z.number(), z.number()]) }) }, [
+            '--tuple',
+            '1',
+            '2',
+        ]);
         expect(result).toHaveProperty('options', { tuple: [1, 2] });
     });
 
     test('variadic tuple', () => {
-        const result = parse({ options: { tuple: z.tuple([z.number()]).rest(z.string()) } }, ['--tuple', '1', 'value']);
+        const result = parse({ options: z.object({ tuple: z.tuple([z.number()]).rest(z.string()) }) }, [
+            '--tuple',
+            '1',
+            'value',
+        ]);
         expect(result).toHaveProperty('options', { tuple: [1, 'value'] });
     });
 });
@@ -155,7 +168,7 @@ test('support for --', () => {
 
 describe('error cases', () => {
     test('undocumented option', () => {
-        expect(() => parse({ options: {} }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(`
+        expect(() => parse({ options: z.object({}).strict() }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(`
           [ZodError: [
             {
               "code": "unrecognized_keys",
@@ -170,9 +183,8 @@ describe('error cases', () => {
     });
 
     test('too many positionals', () => {
-        expect(() =>
-            parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad'])
-        ).toThrowErrorMatchingInlineSnapshot(`
+        expect(() => parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad']))
+            .toThrowErrorMatchingInlineSnapshot(`
           [ZodError: [
             {
               "code": "too_big",
@@ -191,13 +203,13 @@ describe('error cases', () => {
 test('kitchen sink', () => {
     const result = parse(
         {
-            options: {
+            options: z.object({
                 foo: z.boolean(),
                 bar: z.boolean(),
                 baz: z.boolean().default(true),
                 string: z.string(),
                 number: z.number().int().positive(),
-            },
+            }),
             positionals: z.tuple([z.string(), z.coerce.number()]),
         },
         ['--foo', '--no-bar', '--string', 'hello', 'positional1', '--number', '1', '2']

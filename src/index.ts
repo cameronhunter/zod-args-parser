@@ -1,9 +1,9 @@
 import z, { ZodFirstPartyTypeKind } from 'zod/v3';
 
-export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
+export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>>(
     config: { options?: Options; positionals?: Positionals },
     args: string[] = process.argv.slice(2)
-): { options: z.objectOutputType<Options, z.ZodTypeAny>; positionals: z.output<Positionals> } {
+): { options: z.output<Options>; positionals: z.output<Positionals> } {
     const options = {};
     const positionals = [];
 
@@ -21,7 +21,8 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
             const parts = arg.slice(2).split('=');
             const fullName = parts.at(0)!;
             const nonNegatedName = negated ? fullName.slice(3) : fullName;
-            const validator = config.options?.[fullName] || config.options?.[nonNegatedName];
+            const validators = config.options?._def.shape();
+            const validator = validators?.[fullName] || validators?.[nonNegatedName];
 
             if (!validator) {
                 const consumeNextArg = args[i + 1] !== undefined && !args[i + 1]?.startsWith('--');
@@ -84,7 +85,7 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
     }
 
     return {
-        options: config.options ? z.object(config.options).strict().parse(options) : ({} as any),
+        options: config.options ? config.options.parse(options) : ({} as any),
         positionals: config.positionals ? config.positionals.parse(positionals) : ([] as any),
         ...(passthrough ? { '--': passthrough } : undefined),
     };
