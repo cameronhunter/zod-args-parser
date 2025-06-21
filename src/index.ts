@@ -19,7 +19,6 @@ export function parse<Options extends z.ZodRawShape, Positionals extends z.ZodTu
         if (arg.startsWith('--')) {
             const negated = arg.startsWith('--no-');
             const parts = arg.slice(2).split('=');
-            const name = parts.at(0)!;
             const fullName = parts.at(0)!;
             const nonNegatedName = negated ? fullName.slice(3) : fullName;
             const validator = config.options?.[fullName] || config.options?.[nonNegatedName];
