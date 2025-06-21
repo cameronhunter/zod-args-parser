@@ -1,12 +1,11 @@
-import * as z3 from 'zod/v3';
-import * as z4 from 'zod/v4/core';
 import {
+    getZodType,
     type ZodArrayAny,
+    type ZodObjectOutput,
     type ZodOutput,
     type ZodTuple,
     type ZodTypeAny,
-    type ZodObjectOutput,
-    getZodType,
+    type ZodTypeDefType,
 } from './zod-compatibility.js';
 
 export function parse<Options extends { [option: string]: ZodTypeAny }, Positionals extends ZodTuple | ZodArrayAny>(
@@ -99,7 +98,7 @@ export function parse<Options extends { [option: string]: ZodTypeAny }, Position
     };
 }
 
-function parseValue(input: string, typeName: z4.$ZodTypeDef['type']) {
+function parseValue(input: string, typeName: ZodTypeDefType) {
     switch (typeName) {
         case 'boolean':
             return input === 'true' || input === '1';

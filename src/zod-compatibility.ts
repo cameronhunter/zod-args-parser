@@ -15,6 +15,8 @@ export type ZodOutput<T extends ZodTypeAny> = T extends z4.$ZodType
     ? z3.output<T>
     : never;
 
+export type ZodTypeDefType = z4.$ZodTypeDef['type'];
+
 export function getZodType(validator: ZodTypeAny): z4.$ZodTypeDef['type'] {
     if (isZod4(validator)) {
         return validator._zod.def.type;
