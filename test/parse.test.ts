@@ -168,25 +168,31 @@ test('support for --', () => {
 
 describe('error cases', () => {
     test('undocumented option', () => {
-        expect(() => parse({ options: z.object({}).strict() }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(`[ZodValidationError: Validation error: Unrecognized key(s) in object: 'unknown' at "options"]`);
+        expect(() => parse({ options: z.object({}).strict() }, ['--unknown'])).toThrowErrorMatchingInlineSnapshot(
+            `[ZodValidationError: Validation error: Unrecognized key(s) in object: 'unknown' at "options"]`
+        );
     });
 
     test('too many positionals', () => {
-        expect(() => parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad']))
-            .toThrowErrorMatchingInlineSnapshot(`[ZodValidationError: Validation error: Array must contain at most 1 element(s) at "positionals"]`);
+        expect(() => parse({ positionals: z.tuple([z.string()]) }, ['good', 'bad'])).toThrowErrorMatchingInlineSnapshot(
+            `[ZodValidationError: Validation error: Array must contain at most 1 element(s) at "positionals"]`
+        );
     });
 });
 
 test('kitchen sink', () => {
     const result = parse(
         {
-            options: z.object({
-                foo: z.boolean(),
-                bar: z.boolean(),
-                baz: z.boolean().default(true),
-                string: z.string(),
-                number: z.number().int().positive(),
-            }),
+            options: z
+                .object({
+                    foo: z.boolean().default(false),
+                    bar: z.boolean(),
+                    baz: z.boolean().default(true),
+                    boo: z.boolean().optional(),
+                    string: z.string(),
+                    number: z.number().int().positive(),
+                })
+                .strict(),
             positionals: z.tuple([z.string(), z.coerce.number()]),
         },
         ['--foo', '--no-bar', '--string', 'hello', 'positional1', '--number', '1', '2']

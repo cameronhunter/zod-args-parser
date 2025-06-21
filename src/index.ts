@@ -1,5 +1,6 @@
 import z, { ZodFirstPartyTypeKind } from 'zod/v3';
 import { fromZodError } from 'zod-validation-error';
+import { getZodType } from './zod-utils.js';
 
 type Configuration<Options extends z.AnyZodObject, Positionals extends z.ZodTuple | z.ZodArray<z.ZodTypeAny>> = {
     options?: Options;
@@ -41,7 +42,7 @@ export function parse<Options extends z.AnyZodObject, Positionals extends z.ZodT
                 continue;
             }
 
-            const typeName = validator._def.typeName as ZodFirstPartyTypeKind;
+            const typeName = getZodType(validator);
 
             switch (typeName) {
                 case ZodFirstPartyTypeKind.ZodBoolean: {
