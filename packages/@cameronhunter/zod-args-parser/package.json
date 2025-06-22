@@ -1,0 +1,36 @@
+{
+    "name": "@cameronhunter/zod-args-parser",
+    "description": "A CLI argument parser using `zod` for validation",
+    "version": "0.0.0",
+    "type": "module",
+    "main": "./build/commonjs/index.js",
+    "types": "./build/commonjs/index.d.ts",
+    "module": "./build/module/index.js",
+    "exports": {
+        "types": "./build/module/index.d.ts",
+        "import": "./build/module/index.js",
+        "require": "./build/commonjs/index.js"
+    },
+    "files": [
+        "./build/commonjs",
+        "./build/module"
+    ],
+    "scripts": {
+        "build:commonjs": "rm -rf ./build/commonjs ./build/*.commonjs.tsbuildinfo && tsc -p tsconfig.build.commonjs.json && echo '{ \"type\": \"commonjs\" }' > ./build/commonjs/package.json",
+        "build:module": "rm -rf ./build/module ./build/*.module.tsbuildinfo && tsc -p tsconfig.build.module.json && echo '{ \"type\": \"module\" }' > ./build/module/package.json",
+        "build": "npm run build:commonjs && npm run build:module",
+        "prepublishOnly": "npm run build",
+        "release": "npm publish && git push --tags"
+    },
+    "dependencies": {
+        "zod-validation-error": "^3.5.2"
+    },
+    "peerDependencies": {
+        "zod": "^3.25.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.15.32",
+        "zod": "^3.25.0"
+    },
+    "website": "https://github.com/cameronhunter/zod-arg-parser"
+}

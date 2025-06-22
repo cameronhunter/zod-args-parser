@@ -1,0 +1,10 @@
+{
+    "extends": "../../../config/typescript/tsconfig.commonjs.json",
+    "include": [
+        "src"
+    ],
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "build/commonjs"
+    }
+}

@@ -221,19 +221,23 @@ describe('edge cases', () => {
     });
 
     test('options after positionals', () => {
-        const result = parse(
-            { options: z.object({ flag: z.boolean() }), positionals: z.array(z.string()) },
-            ['pos1', '--flag', 'pos2']
-        );
+        const result = parse({ options: z.object({ flag: z.boolean() }), positionals: z.array(z.string()) }, [
+            'pos1',
+            '--flag',
+            'pos2',
+        ]);
         expect(result.options.flag).toBe(true);
         expect(result.positionals).toEqual(['pos1', 'pos2']);
     });
 
     test('mixed options before --', () => {
-        const result = parse(
-            { options: z.object({ flag: z.boolean(), name: z.string() }) },
-            ['--flag', '--name', 'test', '--', '--other']
-        );
+        const result = parse({ options: z.object({ flag: z.boolean(), name: z.string() }) }, [
+            '--flag',
+            '--name',
+            'test',
+            '--',
+            '--other',
+        ]);
         expect(result.options).toEqual({ flag: true, name: 'test' });
         expect(result['--']).toEqual(['--other']);
     });
@@ -301,9 +305,9 @@ describe('advanced parsing scenarios', () => {
 
     test('options and positionals mixed before --', () => {
         const result = parse(
-            { 
+            {
                 options: z.object({ verbose: z.boolean(), name: z.string() }),
-                positionals: z.array(z.string())
+                positionals: z.array(z.string()),
             },
             ['file1', '--verbose', 'file2', '--name', 'test', 'file3', '--', '--extra']
         );
@@ -318,10 +322,13 @@ describe('advanced parsing scenarios', () => {
     });
 
     test('variadic tuple with rest elements', () => {
-        const result = parse(
-            { options: z.object({ coords: z.tuple([z.number(), z.number()]).rest(z.string()) }) },
-            ['--coords', '1', '2', 'extra1', 'extra2']
-        );
+        const result = parse({ options: z.object({ coords: z.tuple([z.number(), z.number()]).rest(z.string()) }) }, [
+            '--coords',
+            '1',
+            '2',
+            'extra1',
+            'extra2',
+        ]);
         expect(result.options.coords).toEqual([1, 2, 'extra1', 'extra2']);
     });
 
@@ -329,9 +336,9 @@ describe('advanced parsing scenarios', () => {
         const result = parse(
             {
                 options: z.object({
-                    config: z.string().refine(s => s.endsWith('.json'), 'Must be a JSON file'),
-                    port: z.number().int().min(1000).max(65535)
-                })
+                    config: z.string().refine((s) => s.endsWith('.json'), 'Must be a JSON file'),
+                    port: z.number().int().min(1000).max(65535),
+                }),
             },
             ['--config', 'app.json', '--port', '3000']
         );
